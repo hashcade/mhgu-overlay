@@ -1,0 +1,40 @@
+--- a/tesla.hpp
++++ b/tesla.hpp
+@@ -785,6 +785,10 @@
+ 						currFont = &this->m_cns_extFont;
+ 					else if (stbtt_FindGlyphIndex(&this->m_cns_stdFont, currCharacter))
+ 						currFont = &this->m_cns_stdFont;
++					else if (stbtt_FindGlyphIndex(&this->m_twFont, currCharacter))
++						currFont = &this->m_twFont;
++					else if (stbtt_FindGlyphIndex(&this->m_koFont, currCharacter))
++						currFont = &this->m_koFont;
+ 					else if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
+ 						currFont = &this->m_extFont;
+ 					else
+@@ -858,7 +862,7 @@
+ 			bool m_scissoring = false;
+ 			u16 m_scissorBounds[4];
+ 
+-			stbtt_fontinfo m_stdFont, m_extFont, m_cns_stdFont, m_cns_extFont;
++			stbtt_fontinfo m_stdFont, m_extFont, m_cns_stdFont, m_cns_extFont, m_twFont, m_koFont;
+ 
+ 			static inline float s_opacity = 1.0F;
+ 
+@@ -1054,6 +1058,17 @@
+ 				fontBuffer = reinterpret_cast<u8*>(cns_extFontData.address);
+ 				stbtt_InitFont(&this->m_cns_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+ 				
++				// Traditional Chinese and Korean fallback glyphs.
++				static PlFontData twFontData, koFontData;
++				if(R_FAILED(res = plGetSharedFontByType(&twFontData, PlSharedFontType_ChineseTraditional)))
++					return res;
++				fontBuffer = reinterpret_cast<u8*>(twFontData.address);
++				stbtt_InitFont(&this->m_twFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
++				if(R_FAILED(res = plGetSharedFontByType(&koFontData, PlSharedFontType_KO)))
++					return res;
++				fontBuffer = reinterpret_cast<u8*>(koFontData.address);
++				stbtt_InitFont(&this->m_koFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
++
+ 				return res;
+ 			}
+ 			
