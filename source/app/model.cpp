@@ -80,7 +80,13 @@ void Model::cycle_language() {
         settings_.locale_mode = core::LocaleMode::SimplifiedChinese;
         break;
       case core::LocaleMode::SimplifiedChinese:
+        settings_.locale_mode = core::LocaleMode::TraditionalChinese;
+        break;
+      case core::LocaleMode::TraditionalChinese:
         settings_.locale_mode = core::LocaleMode::Japanese;
+        break;
+      case core::LocaleMode::Japanese:
+        settings_.locale_mode = core::LocaleMode::Korean;
         break;
       default:
         settings_.locale_mode = core::LocaleMode::Auto;

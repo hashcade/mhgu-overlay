@@ -176,6 +176,18 @@ int main() {
     assert(!feature.enabled);
   }
 
+  for (const auto locale :
+       {core::LocaleMode::Auto,
+        core::LocaleMode::English,
+        core::LocaleMode::SimplifiedChinese,
+        core::LocaleMode::TraditionalChinese,
+        core::LocaleMode::Japanese,
+        core::LocaleMode::Korean}) {
+    updated.locale_mode = locale;
+    assert(store.save(updated));
+    assert(store.load().locale_mode == locale);
+  }
+
   auto* legacy_damage = std::fopen(kPath, "w");
   assert(legacy_damage != nullptr);
   std::fprintf(legacy_damage, "damage_display=1\n");

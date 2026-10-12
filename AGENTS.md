@@ -33,7 +33,8 @@
 
 - Store gameplay facts under `data/catalog/`.
 - Store every user-facing translation under `data/locales/<locale>.json`.
-- English, Simplified Chinese, and Japanese are the supported locales.
+- English, Simplified Chinese, Traditional Chinese, Japanese, and Korean
+  are the supported locales.
   Unsupported languages and detection failures fall back to English.
 - Locale files must have identical monster and UI keys.
 - Do not edit files under `source/generated/` by hand. After changing catalog

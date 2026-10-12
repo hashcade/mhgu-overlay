@@ -14,7 +14,7 @@ namespace {
 constexpr MonsterDefinition kRathian{
   1,
   "rathian",
-  {"Rathian", "雌火龙", "リオレイア"},
+  {"Rathian", "雌火龙", "リオレイア", "雌火龍", "리오레이아"},
   165430,
   90,
   115,
@@ -77,6 +77,32 @@ int main() {
     Locale::SimplifiedChinese
   );
   assert(
+    resolve_locale(GameId::Mhgu, LocaleMode::Auto, Locale::Korean) ==
+    Locale::Korean
+  );
+  assert(
+    resolve_locale(
+      GameId::Mhgu, LocaleMode::Auto, Locale::TraditionalChinese
+    ) == Locale::TraditionalChinese
+  );
+  assert(
+    resolve_locale(GameId::Mhxx, LocaleMode::Korean, Locale::Japanese) ==
+    Locale::Korean
+  );
+  assert(
+    resolve_locale(
+      GameId::Mhxx, LocaleMode::TraditionalChinese, Locale::Japanese
+    ) == Locale::TraditionalChinese
+  );
+  assert(
+    std::strcmp(localized_name(*rathian, Locale::Korean), "리오레이아") == 0
+  );
+  assert(
+    std::strcmp(
+      localized_name(*rathian, Locale::TraditionalChinese), "雌火龍"
+    ) == 0
+  );
+  assert(
     std::strcmp(localized_name(*rathian, Locale::Japanese), "リオレイア") == 0
   );
   assert(
@@ -87,8 +113,7 @@ int main() {
   );
   assert(
     std::strcmp(
-      ui_message(UiMessage::Scanning, Locale::SimplifiedChinese),
-      "等待怪物数据"
+      ui_message(UiMessage::Scanning, Locale::SimplifiedChinese), "等待怪物数据"
     ) == 0
   );
   assert(
@@ -99,8 +124,7 @@ int main() {
   );
   assert(
     std::strcmp(
-      ui_message(UiMessage::HudDamageOnly, Locale::English),
-      "Damage only"
+      ui_message(UiMessage::HudDamageOnly, Locale::English), "Damage only"
     ) == 0
   );
   assert(
@@ -111,8 +135,7 @@ int main() {
   );
   assert(
     std::strcmp(
-      ui_message(UiMessage::HudDamageOnly, Locale::Japanese),
-      "ダメージのみ"
+      ui_message(UiMessage::HudDamageOnly, Locale::Japanese), "ダメージのみ"
     ) == 0
   );
 

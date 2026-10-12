@@ -14,6 +14,10 @@ Locale resolve_locale(
       return Locale::SimplifiedChinese;
     case LocaleMode::Japanese:
       return Locale::Japanese;
+    case LocaleMode::TraditionalChinese:
+      return Locale::TraditionalChinese;
+    case LocaleMode::Korean:
+      return Locale::Korean;
     case LocaleMode::Auto:
     default:
       return game == GameId::Mhxx ? Locale::Japanese : detected_locale;
@@ -27,6 +31,10 @@ localized_name(const MonsterDefinition& monster, const Locale locale) {
       return monster.names.simplified_chinese;
     case Locale::Japanese:
       return monster.names.japanese;
+    case Locale::TraditionalChinese:
+      return monster.names.traditional_chinese;
+    case Locale::Korean:
+      return monster.names.korean;
     case Locale::English:
     default:
       return monster.names.english;

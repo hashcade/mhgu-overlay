@@ -22,6 +22,8 @@ int main() {
     assert(food_skill_name(skill.id, Locale::English)[0] != '\0');
     assert(food_skill_name(skill.id, Locale::SimplifiedChinese)[0] != '\0');
     assert(food_skill_name(skill.id, Locale::Japanese)[0] != '\0');
+    assert(food_skill_name(skill.id, Locale::TraditionalChinese)[0] != '\0');
+    assert(food_skill_name(skill.id, Locale::Korean)[0] != '\0');
   }
   assert(find_food_skill(0) == nullptr);
   assert(find_food_skill(66) == nullptr);
@@ -37,13 +39,21 @@ int main() {
     ) == 0
   );
   assert(
-    std::strcmp(
-      food_skill_name(40, Locale::SimplifiedChinese), "猫的击晕术"
-    ) == 0
+    std::strcmp(food_skill_name(40, Locale::SimplifiedChinese), "猫的击晕术") ==
+    0
   );
   assert(
     std::strcmp(
       food_skill_name(64, Locale::Japanese), "ネコのあとは任せた！"
+    ) == 0
+  );
+
+  assert(
+    std::strcmp(food_skill_name(18, Locale::Korean), "야옹 재난대처능력") == 0
+  );
+  assert(
+    std::strcmp(
+      food_skill_name(18, Locale::TraditionalChinese), "貓的火場怪力"
     ) == 0
   );
 
@@ -55,6 +65,8 @@ int main() {
     assert(localized_name(monster, Locale::English)[0] != '\0');
     assert(localized_name(monster, Locale::SimplifiedChinese)[0] != '\0');
     assert(localized_name(monster, Locale::Japanese)[0] != '\0');
+    assert(localized_name(monster, Locale::TraditionalChinese)[0] != '\0');
+    assert(localized_name(monster, Locale::Korean)[0] != '\0');
 
     if (monster.variable_size) {
       assert(monster.base_size_x100 > 0);

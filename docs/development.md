@@ -29,6 +29,8 @@ git submodule update --init --recursive
 | Change English UI text or monster names | `data/locales/en.json` |
 | Change Simplified Chinese text or names | `data/locales/zh-Hans.json` |
 | Change Japanese UI text or names | `data/locales/ja.json` |
+| Change Traditional Chinese text or names | `data/locales/zh-Hant.json` |
+| Change Korean UI text or names | `data/locales/ko.json` |
 | Change monster size or crown data | `data/catalog/monsters.seed.json`, `data/catalog/legal-size-ranges.json`, and the refresh pipeline |
 | Change health, size, or preset decisions | `include/mhgu/core/` and `source/core/` |
 | Change Switch addresses or title support | `source/platform/switch/game_profile.cpp` |
@@ -276,3 +278,10 @@ the NRO metadata.
   write error as a safety stop.
 - **A generated file changed unexpectedly**: rerun the generator, review the
   source JSON diff, and do not hand-edit generated C++.
+
+### Shared fonts
+
+The build applies `patches/libtesla-fonts.patch` to a build-local Tesla header
+to load the console's Traditional Chinese and Korean shared fonts. The
+submodule remains unchanged. Translation sources are documented in
+[localization.md](localization.md).

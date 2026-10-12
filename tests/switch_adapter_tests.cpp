@@ -2284,8 +2284,15 @@ int main() {
   assert(locale_from_switch_language(0) == core::Locale::Japanese);
   assert(locale_from_switch_language(6) == core::Locale::SimplifiedChinese);
   assert(locale_from_switch_language(15) == core::Locale::SimplifiedChinese);
-  assert(locale_from_switch_language(7) == core::Locale::English);
+  assert(locale_from_switch_language(7) == core::Locale::Korean);
   assert(locale_from_switch_language(2) == core::Locale::English);
+  assert(locale_from_switch_language(11) == core::Locale::TraditionalChinese);
+  assert(locale_from_switch_language(16) == core::Locale::TraditionalChinese);
+  assert(locale_from_nacp_language(2) == core::Locale::Japanese);
+  assert(locale_from_nacp_language(12) == core::Locale::TraditionalChinese);
+  assert(locale_from_nacp_language(13) == core::Locale::SimplifiedChinese);
+  assert(locale_from_nacp_language(14) == core::Locale::Korean);
+  assert(locale_from_nacp_language(-1) == core::Locale::English);
 
   MonsterReader reader(memory, profile, 0, 0x18000);
   assert(reader.find_pointer_list() == kList);

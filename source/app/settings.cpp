@@ -58,6 +58,12 @@ core::LocaleMode parse_locale(const char* value) {
   if (std::strcmp(value, "ja") == 0) {
     return core::LocaleMode::Japanese;
   }
+  if (std::strcmp(value, "zh-Hant") == 0) {
+    return core::LocaleMode::TraditionalChinese;
+  }
+  if (std::strcmp(value, "ko") == 0) {
+    return core::LocaleMode::Korean;
+  }
   return core::LocaleMode::Auto;
 }
 
@@ -352,6 +358,10 @@ const char* locale_value(const core::LocaleMode mode) {
       return "zh-Hans";
     case core::LocaleMode::Japanese:
       return "ja";
+    case core::LocaleMode::TraditionalChinese:
+      return "zh-Hant";
+    case core::LocaleMode::Korean:
+      return "ko";
     default:
       return "auto";
   }

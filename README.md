@@ -29,7 +29,7 @@ The main menu is ordered as follows:
 
 | Menu item | What it does |
 | --- | --- |
-| **Language** | Uses automatic game-language detection or selects English, Simplified Chinese, or Japanese manually. |
+| **Language** | Uses automatic game-language detection or selects English, Simplified Chinese, Traditional Chinese, Japanese, or Korean manually. |
 | **Status** | Shows whether a supported MHGU/MHXX profile is detected, scanning, ready, unsupported, or unable to read or write memory. |
 | **Monster HUD** | Opens the low-profile hunting HUD. The separate **HUD layout** selector chooses lower-left, left-center, upper-right, right-center, or top-center placement. |
 | **HUD content** | Selects monster information, monster information with animated damage values, or damage values only. Monster cards include the name, health bar, current and maximum health, health percentage, size multiplier, calculated size, crown class, and Hyper status. |
@@ -195,8 +195,10 @@ screenshots, and media are not copied into this repository.
 - [Kiranico](https://mhxx.kiranico.com/) — authoritative base sizes, crown
   thresholds, and MHGU/MHXX food-skill names used by the catalog pipeline.
 - [Monster Hunter World Chronicles](https://mhw.poedb.tw/chs/food_skills) —
-  Simplified Chinese labels reused only where the Japanese food-skill name
+  Chinese and Korean labels reused only where the Japanese food-skill name
   exactly matches MHGU/MHXX.
+- [Namu Wiki](https://namu.moe/w/몬스터%20헌터%20시리즈/몬스터%20목록) —
+  Korean community monster names.
 - [MH Crown](https://mhcrown.com/) — independent crown-size cross-checks.
 - [libtesla](https://github.com/minazuki19/libtesla) — Tesla UI runtime
   dependency included as a Git submodule under its own license.

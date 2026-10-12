@@ -14,6 +14,10 @@ const char* language_value(Model& model) {
       return "简体中文";
     case LocaleMode::Japanese:
       return "日本語";
+    case LocaleMode::TraditionalChinese:
+      return "繁體中文";
+    case LocaleMode::Korean:
+      return "한국어";
     default:
       return text(model, UiMessage::Automatic);
   }

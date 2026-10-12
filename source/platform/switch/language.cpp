@@ -16,12 +16,30 @@ core::Locale locale_from_switch_language(const std::int32_t language) {
     case 0:
       return core::Locale::Japanese;
     case 6:
-    case 11:
     case 15:
-    case 16:
       return core::Locale::SimplifiedChinese;
+    case 11:
+    case 16:
+      return core::Locale::TraditionalChinese;
+    case 7:
+      return core::Locale::Korean;
     case 1:
     case 12:
+    default:
+      return core::Locale::English;
+  }
+}
+
+core::Locale locale_from_nacp_language(const std::int32_t language) {
+  switch (language) {
+    case 2:
+      return core::Locale::Japanese;
+    case 12:
+      return core::Locale::TraditionalChinese;
+    case 13:
+      return core::Locale::SimplifiedChinese;
+    case 14:
+      return core::Locale::Korean;
     default:
       return core::Locale::English;
   }
@@ -61,17 +79,17 @@ core::Locale detect_game_locale(const std::uint64_t title_id) {
       sizeof(*control),
       &actual_size
     );
-    if (R_SUCCEEDED(control_result) && actual_size >= sizeof(NacpStruct) &&
-        R_SUCCEEDED(
-          nsGetApplicationDesiredLanguage(&control->nacp, &desired)
-        ) &&
-        desired != nullptr) {
+    if (
+      R_SUCCEEDED(control_result) && actual_size >= sizeof(NacpStruct) &&
+      R_SUCCEEDED(nsGetApplicationDesiredLanguage(&control->nacp, &desired)) &&
+      desired != nullptr
+    ) {
       const auto* language_entries =
         reinterpret_cast<const NacpLanguageEntry*>(&control->nacp);
       const auto index = desired - language_entries;
       nsExit();
       if (index >= 0 && index < 16) {
-        return locale_from_switch_language(static_cast<std::int32_t>(index));
+        return locale_from_nacp_language(static_cast<std::int32_t>(index));
       }
       return core::Locale::English;
     }

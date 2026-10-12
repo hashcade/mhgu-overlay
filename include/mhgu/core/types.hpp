@@ -26,6 +26,8 @@ enum class Locale : std::uint8_t {
   English,
   SimplifiedChinese,
   Japanese,
+  TraditionalChinese,
+  Korean,
 };
 
 enum class LocaleMode : std::uint8_t {
@@ -33,6 +35,8 @@ enum class LocaleMode : std::uint8_t {
   English,
   SimplifiedChinese,
   Japanese,
+  TraditionalChinese,
+  Korean,
 };
 
 enum class Crown : std::uint8_t {
@@ -169,9 +173,8 @@ struct NumericFeatureRange {
   std::uint32_t maximum;
 };
 
-constexpr NumericFeatureRange numeric_feature_range(
-  const NumericFeature feature
-) {
+constexpr NumericFeatureRange
+numeric_feature_range(const NumericFeature feature) {
   switch (feature) {
     case NumericFeature::HunterAffinity:
     case NumericFeature::PalicoAffinity:
@@ -204,6 +207,8 @@ struct LocalizedNames {
   const char* english;
   const char* simplified_chinese;
   const char* japanese;
+  const char* traditional_chinese;
+  const char* korean;
 };
 
 struct MonsterDefinition {
