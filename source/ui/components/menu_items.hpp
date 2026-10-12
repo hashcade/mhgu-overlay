@@ -535,36 +535,39 @@ public:
     m_title = std::move(title);
   }
 
-  // Draw the menu on the left half of the screen only.  The full 1280px
-  // framebuffer is needed for the hunting HUD's side-by-side layout, but the
-  // menu list only needs half that width and leaves the rest of the game
-  // visible.
+  // Keep the standard 448px menu width within the full-screen HUD framebuffer.
   void draw(tsl::gfx::Renderer* renderer) override {
-    const u16 half_width = tsl::cfg::FramebufferWidth / 2;
-
     renderer->drawRect(
-      0, 0, half_width, tsl::cfg::FramebufferHeight,
+      0,
+      0,
+      kMenuWidth,
+      tsl::cfg::FramebufferHeight,
       tsl::gfx::Color{0x0, 0x0, 0x0, alphabackground}
     );
 
     renderer->drawString(
-      m_title.c_str(), false, 20, 50, 30,
-      tsl::gfx::Color{0xF, 0xF, 0xF, 0xF}
+      m_title.c_str(), false, 20, 50, 30, tsl::gfx::Color{0xF, 0xF, 0xF, 0xF}
     );
     renderer->drawString(
-      m_subtitle.c_str(), false, 20, 70, 15,
-      tsl::gfx::Color{0xC, 0xC, 0xC, 0xF}
+      m_subtitle.c_str(), false, 20, 70, 15, tsl::gfx::Color{0xC, 0xC, 0xC, 0xF}
     );
 
     if (FullMode) {
       renderer->drawRect(
-        15, tsl::cfg::FramebufferHeight - 73, half_width - 30, 1,
+        15,
+        tsl::cfg::FramebufferHeight - 73,
+        kMenuWidth - 30,
+        1,
         tsl::gfx::Color{0xF, 0xF, 0xF, 0xF}
       );
     }
     if (!deactivateOriginalFooter) {
       renderer->drawString(
-        "\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23,
+        "\uE0E1  Back     \uE0E0  OK",
+        false,
+        30,
+        693,
+        23,
         tsl::gfx::Color{0xF, 0xF, 0xF, 0xF}
       );
     }
@@ -574,19 +577,19 @@ public:
     }
   }
 
-  void layout(
-    u16 parentX, u16 parentY, u16 parentWidth, u16 parentHeight
-  ) override {
-    const u16 half_width = parentWidth / 2;
-    setBoundaries(parentX, parentY, half_width, parentHeight);
+  void layout(u16 parentX, u16 parentY, u16, u16 parentHeight) override {
+    setBoundaries(parentX, parentY, kMenuWidth, parentHeight);
 
     if (m_contentElement != nullptr) {
       m_contentElement->setBoundaries(
-        parentX + 35, parentY + 140, half_width - 85, parentHeight - 73 - 105
+        parentX + 35, parentY + 140, kMenuWidth - 85, parentHeight - 73 - 105
       );
       m_contentElement->invalidate();
     }
   }
+
+private:
+  static constexpr u16 kMenuWidth = 448;
 };
 
 // Lists every food skill (0x01..0x41) and assigns the chosen one to a slot.
