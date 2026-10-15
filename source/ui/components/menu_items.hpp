@@ -9,7 +9,12 @@ const char* text(Model& model, const UiMessage message) {
 std::string g_action_error;
 
 bool play_action_confirmation() {
-  return false;
+  const auto setting = parseValueFromIniSection(
+    "sdmc:/config/ultrahand/config.ini", "ultrahand", "sound_effects"
+  );
+  return mhgu::platform::switch_adapter::play_confirmation_sound(
+    setting != "false" && setting != "0"
+  );
 }
 
 class ActionListItem final : public tsl::elm::ListItem {
@@ -48,7 +53,7 @@ public:
       status == ActionStatus::NoCharacterData ||
       status == ActionStatus::NoActiveQuest || status == ActionStatus::Failed
     ) {
-      auto reason = UiMessage::Failed;
+      auto reason = UiMessage::WriteFailed;
       if (status == ActionStatus::NoCharacterData)
         reason = UiMessage::NoCharacterData;
       else if (status == ActionStatus::NoActiveQuest)

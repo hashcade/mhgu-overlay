@@ -14,6 +14,7 @@
 #include "mhgu/core/food_skills.hpp"
 #include "mhgu/core/locale.hpp"
 #include "mhgu/core/messages.hpp"
+#include "mhgu/platform/switch/feedback_audio.hpp"
 
 namespace {
 
@@ -88,7 +89,12 @@ public:
   }
 
   void exitServices() override {
+    mhgu::platform::switch_adapter::stop_feedback_audio();
     model_.stop();
+  }
+
+  void onHide() override {
+    mhgu::platform::switch_adapter::stop_feedback_audio();
   }
 
   void onShow() override {

@@ -14,23 +14,29 @@ CATALOG_TEST_BINARY := $(HOST_BUILD)/catalog-tests
 SWITCH_TEST_BINARY := $(HOST_BUILD)/switch-adapter-tests
 SETTINGS_TEST_BINARY := $(HOST_BUILD)/settings-tests
 ACTION_TEST_BINARY := $(HOST_BUILD)/action-feedback-tests
+SOUND_TEST_BINARY := $(HOST_BUILD)/sound-tests
 
 .PHONY: test clean-host
 
 test: $(TEST_BINARY) $(DAMAGE_TEST_BINARY) $(CATALOG_TEST_BINARY) \
 		$(SWITCH_TEST_BINARY) \
-		$(SETTINGS_TEST_BINARY) $(ACTION_TEST_BINARY)
+		$(SETTINGS_TEST_BINARY) $(ACTION_TEST_BINARY) $(SOUND_TEST_BINARY)
 	@$(TEST_BINARY)
 	@$(DAMAGE_TEST_BINARY)
 	@$(CATALOG_TEST_BINARY)
 	@$(SWITCH_TEST_BINARY)
 	@$(SETTINGS_TEST_BINARY)
 	@$(ACTION_TEST_BINARY)
+	@$(SOUND_TEST_BINARY)
 	@$(PYTHON) tests/generate_size_reference_tests.py
 
 $(ACTION_TEST_BINARY): tests/action_feedback_tests.cpp include/mhgu/core/action_feedback.hpp
 	@mkdir -p $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -Iinclude tests/action_feedback_tests.cpp -o $@
+
+$(SOUND_TEST_BINARY): source/core/sound.cpp tests/sound_tests.cpp include/mhgu/core/sound.hpp
+	@mkdir -p $(HOST_BUILD)
+	$(CXX) $(CXXFLAGS) -std=c++20 -Iinclude source/core/sound.cpp tests/sound_tests.cpp -o $@
 
 $(TEST_BINARY): $(CORE_SOURCES) tests/core_tests.cpp
 	@mkdir -p $(HOST_BUILD)

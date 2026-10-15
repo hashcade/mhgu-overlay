@@ -142,6 +142,10 @@ food skills after eating again or changing sessions.
 
 ## Controls and persistence
 
+- One-shot game edits play Ultrahand's installed confirmation sound after
+  success. With sounds disabled or unavailable, the selected row briefly shows
+  **Completed** instead. Failures show **Failed** and the reason below the title.
+  No audio files are bundled or installed; patch toggles keep their **On/Off** values.
 - Press `A` to open a submenu, cycle a selector, toggle a patch, or apply the
   selected value.
 - Use Left/Right for small numeric adjustments and `L`/`R` for larger steps.

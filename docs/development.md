@@ -61,11 +61,19 @@ instead of formatting those files directly.
 ## Run host tests
 
 The portable core and adapters have ordinary desktop tests. On macOS or Linux
-with a C++17 compiler:
+with a C++20 compiler (also used by the Switch build):
 
 ```sh
 make -f Makefile.host test
 ```
+
+One-shot edits expose a shared asynchronous result in the app model. The UI
+consumes a completed result once, then plays the active Ultrahand pack's
+`sdmc:/config/ultrahand/sounds/enter.wav`. It respects `[ultrahand] sound_effects`
+in `sdmc:/config/ultrahand/config.ini`; no audio assets are copied or bundled.
+The optional `audout` adapter lives under `source/platform/switch/`; its portable
+WAV decoder lives in the core. Missing/disabled/unsupported audio falls back
+to a two-second completion value. Failures keep the reason in the subtitle.
 
 Expected output:
 
