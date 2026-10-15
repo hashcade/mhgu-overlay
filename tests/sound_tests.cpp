@@ -67,7 +67,7 @@ int main() {
   // safely.
   for (std::size_t size = 0; size < mono.size(); ++size)
     assert(decode_confirmation_sound(std::span(mono).first(size)).empty());
-  for (const auto [offset, value] :
+  for (const auto& [offset, value] :
        {std::pair{20, 3}, {22, 3}, {34, 24}, {32, 4}}) {
     auto invalid = mono;
     put(invalid, offset, static_cast<std::uint16_t>(value));
