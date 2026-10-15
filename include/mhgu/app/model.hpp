@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -7,24 +8,16 @@
 #include <thread>
 
 #include "mhgu/app/settings.hpp"
+#include "mhgu/core/action_feedback.hpp"
 #include "mhgu/platform/switch/game_session.hpp"
 
 namespace mhgu::app {
 
-enum class QuestCompletionStatus : std::uint8_t {
-  Idle,
-  Pending,
-  Completed,
-  NoActiveQuest,
-  Failed,
-};
-
-enum class FoodSkillApplyStatus : std::uint8_t {
-  Idle,
-  Pending,
-  Applied,
-  NoCharacterData,
-  Failed,
+enum class Action : std::uint8_t {
+  ItemPouchQuantity,
+  FoodSkills,
+  CompleteQuest,
+  Count,
 };
 
 class Model {
@@ -37,8 +30,7 @@ public:
 
   core::CoreSettings settings() const;
   platform::switch_adapter::SessionView session_view() const;
-  QuestCompletionStatus quest_completion_status() const;
-  FoodSkillApplyStatus food_skill_apply_status() const;
+  core::ActionStatus action_status(Action action) const;
   core::Locale display_locale() const;
 
   void cycle_language();
@@ -79,12 +71,14 @@ public:
 private:
   void worker_main();
   void persist(const core::CoreSettings& settings);
+  bool begin_action(Action action);
+  void finish_action(Action action, core::ActionStatus status);
 
   mutable std::mutex mutex_;
   core::CoreSettings settings_{};
   platform::switch_adapter::SessionView view_{};
-  QuestCompletionStatus quest_completion_status_{};
-  FoodSkillApplyStatus food_skill_apply_status_{};
+  std::array<core::ActionStatus, static_cast<std::size_t>(Action::Count)>
+    action_statuses_{};
   platform::switch_adapter::GameSession session_{};
   SettingsStore store_;
   std::atomic<bool> running_{false};

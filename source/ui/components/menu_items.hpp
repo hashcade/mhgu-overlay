@@ -6,6 +6,71 @@ const char* text(Model& model, const UiMessage message) {
   return mhgu::core::ui_message(message, model.display_locale());
 }
 
+std::string g_action_error;
+
+bool play_action_confirmation() {
+  return false;
+}
+
+class ActionListItem final : public tsl::elm::ListItem {
+public:
+  ActionListItem(
+    Model& model, UiMessage label, Action action, std::function<void()> request
+  )
+    : ListItem(text(model, label)),
+      model_(model),
+      label_(label),
+      action_(action),
+      request_(std::move(request)) {
+    if (model_.action_status(action_) == ActionStatus::Pending)
+      feedback_.begin();
+  }
+
+  bool onClick(u64 keys) override {
+    if ((keys & HidNpadButton_A) == 0)
+      return false;
+    if (feedback_.pending())
+      return true;
+    g_action_error.clear();
+    feedback_.begin();
+    request_();
+    setValue("");
+    return true;
+  }
+
+  void draw(tsl::gfx::Renderer* renderer) override {
+    const auto now = monotonic_milliseconds();
+    if (feedback_.observe(model_.action_status(action_)))
+      feedback_.confirmation(play_action_confirmation(), now);
+    setText(text(model_, label_));
+    const auto status = feedback_.status();
+    if (
+      status == ActionStatus::NoCharacterData ||
+      status == ActionStatus::NoActiveQuest || status == ActionStatus::Failed
+    ) {
+      auto reason = UiMessage::Failed;
+      if (status == ActionStatus::NoCharacterData)
+        reason = UiMessage::NoCharacterData;
+      else if (status == ActionStatus::NoActiveQuest)
+        reason = UiMessage::NoActiveQuest;
+      setValue(text(model_, UiMessage::Failed));
+      g_action_error = text(model_, reason);
+    } else {
+      setValue(
+        feedback_.show_done(now) ? text(model_, UiMessage::Completed) : ""
+      );
+    }
+    ListItem::draw(renderer);
+  }
+
+private:
+  Model& model_;
+  UiMessage label_;
+  Action action_;
+  std::function<void()> request_;
+  mhgu::core::ActionFeedback feedback_;
+};
+
 const char* language_value(Model& model) {
   switch (model.settings().locale_mode) {
     case LocaleMode::English:
@@ -280,19 +345,12 @@ tsl::elm::ListItem* item_pouch_quantity_item(Model& model) {
 }
 
 tsl::elm::ListItem* apply_item_pouch_quantity_item(Model& model) {
-  auto* item = new tsl::elm::ListItem(
-    text(model, UiMessage::ApplyItemPouchQuantity)
+  return new ActionListItem(
+    model,
+    UiMessage::ApplyItemPouchQuantity,
+    Action::ItemPouchQuantity,
+    [model_ptr = &model] { model_ptr->request_item_pouch_quantity_write(); }
   );
-  item->setClickListener(
-    [model_ptr = &model](const u64 keys) {
-      if ((keys & HidNpadButton_A) == 0) {
-        return false;
-      }
-      model_ptr->request_item_pouch_quantity_write();
-      return true;
-    }
-  );
-  return item;
 }
 
 constexpr std::array<UiMessage, mhgu::core::kFoodSkillSlotCount>
@@ -356,43 +414,13 @@ tsl::elm::ListItem* food_skill_item(
   return item;
 }
 
-const char* food_skill_apply_value(Model& model) {
-  const auto locale = model.display_locale();
-  switch (model.food_skill_apply_status()) {
-    case FoodSkillApplyStatus::Pending:
-      return "...";
-    case FoodSkillApplyStatus::Applied:
-      return mhgu::core::ui_message(UiMessage::Completed, locale);
-    case FoodSkillApplyStatus::NoCharacterData:
-      return mhgu::core::ui_message(UiMessage::NoCharacterData, locale);
-    case FoodSkillApplyStatus::Failed:
-      return mhgu::core::ui_message(UiMessage::Failed, locale);
-    default:
-      return mhgu::core::ui_message(UiMessage::Execute, locale);
-  }
-}
-
-void refresh_apply_food_skills_item(
-  tsl::elm::ListItem* item, Model& model
-) {
-  item->setText(text(model, UiMessage::ApplyFoodSkills));
-  item->setValue(food_skill_apply_value(model));
-}
-
 tsl::elm::ListItem* apply_food_skills_item(Model& model) {
-  auto* item = new tsl::elm::ListItem(text(model, UiMessage::ApplyFoodSkills));
-  refresh_apply_food_skills_item(item, model);
-  item->setClickListener(
-    [model_ptr = &model, item](const u64 keys) {
-      if ((keys & HidNpadButton_A) == 0) {
-        return false;
-      }
-      model_ptr->request_food_skills_write();
-      refresh_apply_food_skills_item(item, *model_ptr);
-      return true;
-    }
+  return new ActionListItem(
+    model,
+    UiMessage::ApplyFoodSkills,
+    Action::FoodSkills,
+    [model_ptr = &model] { model_ptr->request_food_skills_write(); }
   );
-  return item;
 }
 
 mhgu::core::NumericFeatureSetting numeric_feature_setting(
@@ -533,7 +561,10 @@ tsl::gfx::Color crown_color(const mhgu::core::Crown crown) {
 
 class LocalizedOverlayFrame final : public tsl::elm::OverlayFrame {
 public:
-  using tsl::elm::OverlayFrame::OverlayFrame;
+  LocalizedOverlayFrame(std::string title, std::string subtitle)
+    : OverlayFrame(std::move(title), std::move(subtitle)) {
+    g_action_error.clear();
+  }
 
   void setTitle(std::string title) {
     m_title = std::move(title);
@@ -553,7 +584,8 @@ public:
       m_title.c_str(), false, 20, 50, 30, tsl::gfx::Color{0xF, 0xF, 0xF, 0xF}
     );
     renderer->drawString(
-      m_subtitle.c_str(), false, 20, 70, 15, tsl::gfx::Color{0xC, 0xC, 0xC, 0xF}
+      g_action_error.empty() ? m_subtitle.c_str() : g_action_error.c_str(),
+      false, 20, 70, 15, tsl::gfx::Color{0xC, 0xC, 0xC, 0xF}
     );
 
     if (FullMode) {

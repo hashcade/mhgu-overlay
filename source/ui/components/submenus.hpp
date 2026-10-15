@@ -38,7 +38,8 @@ public:
       RuntimeFeature::UnlimitedHunterArts
     ));
     list->addItem(runtime_feature_item(
-      model_, UiMessage::ValorGaugeNoDecrease,
+      model_,
+      UiMessage::ValorGaugeNoDecrease,
       RuntimeFeature::ValorGaugeNoDecrease
     ));
     list->addItem(runtime_feature_item(
@@ -49,9 +50,9 @@ public:
       UiMessage::LongSwordSpiritGauge,
       NumericFeature::LongSwordSpiritGauge
     ));
-    list->addItem(numeric_feature_item(
-      model_, UiMessage::SpLevel, NumericFeature::SpLevel
-    ));
+    list->addItem(
+      numeric_feature_item(model_, UiMessage::SpLevel, NumericFeature::SpLevel)
+    );
     list->addItem(runtime_feature_item(
       model_, UiMessage::SpStatusNoExpire, RuntimeFeature::SpStatusNoExpire
     ));
@@ -145,9 +146,9 @@ public:
       mhgu::core::ui_message(UiMessage::Resources, locale), kVersion
     );
     auto* list = new tsl::elm::List(6);
-    list->addItem(numeric_feature_item(
-      model_, UiMessage::Zenny, NumericFeature::Zenny
-    ));
+    list->addItem(
+      numeric_feature_item(model_, UiMessage::Zenny, NumericFeature::Zenny)
+    );
     list->addItem(numeric_feature_item(
       model_, UiMessage::WycademyPoints, NumericFeature::WycademyPoints
     ));
@@ -259,7 +260,6 @@ public:
     for (std::size_t slot = 0; slot < food_skill_items_.size(); ++slot) {
       refresh_food_skill_item(food_skill_items_[slot], model_, slot);
     }
-    refresh_apply_food_skills_item(apply_item_, model_);
   }
 
   bool handleInput(
@@ -325,17 +325,11 @@ public:
     });
     list->addItem(unlimited_faints_item_);
 
-    complete_quest_item_ = new tsl::elm::ListItem(
-      mhgu::core::ui_message(UiMessage::CompleteQuest, locale)
-    );
-    complete_quest_item_->setClickListener([this](const u64 keys) {
-      if ((keys & HidNpadButton_A) == 0) {
-        return false;
+    complete_quest_item_ = new ActionListItem(
+      model_, UiMessage::CompleteQuest, Action::CompleteQuest, [this] {
+        model_.request_complete_quest();
       }
-      model_.request_complete_quest();
-      refresh_items();
-      return true;
-    });
+    );
     list->addItem(complete_quest_item_);
 
     refresh_items();
@@ -365,24 +359,11 @@ public:
   }
 
 private:
-  const char* completion_value(const Locale locale) const {
-    switch (model_.quest_completion_status()) {
-      case QuestCompletionStatus::Pending:
-        return "...";
-      case QuestCompletionStatus::Completed:
-        return mhgu::core::ui_message(UiMessage::Completed, locale);
-      case QuestCompletionStatus::NoActiveQuest:
-        return mhgu::core::ui_message(UiMessage::NoActiveQuest, locale);
-      case QuestCompletionStatus::Failed:
-        return mhgu::core::ui_message(UiMessage::Failed, locale);
-      default:
-        return mhgu::core::ui_message(UiMessage::Execute, locale);
-    }
-  }
-
   void refresh_items() {
-    if (frame_ == nullptr || infinite_time_item_ == nullptr ||
-        unlimited_faints_item_ == nullptr || complete_quest_item_ == nullptr) {
+    if (
+      frame_ == nullptr || infinite_time_item_ == nullptr ||
+      unlimited_faints_item_ == nullptr || complete_quest_item_ == nullptr
+    ) {
       return;
     }
     const auto locale = model_.display_locale();
@@ -391,21 +372,19 @@ private:
     infinite_time_item_->setText(
       mhgu::core::ui_message(UiMessage::InfiniteQuestTime, locale)
     );
-    infinite_time_item_->setValue(mhgu::core::ui_message(
-      settings.infinite_quest_time ? UiMessage::On : UiMessage::Off,
-      locale
-    ));
+    infinite_time_item_->setValue(
+      mhgu::core::ui_message(
+        settings.infinite_quest_time ? UiMessage::On : UiMessage::Off, locale
+      )
+    );
     unlimited_faints_item_->setText(
       mhgu::core::ui_message(UiMessage::UnlimitedFaints, locale)
     );
-    unlimited_faints_item_->setValue(mhgu::core::ui_message(
-      settings.unlimited_faints ? UiMessage::On : UiMessage::Off,
-      locale
-    ));
-    complete_quest_item_->setText(
-      mhgu::core::ui_message(UiMessage::CompleteQuest, locale)
+    unlimited_faints_item_->setValue(
+      mhgu::core::ui_message(
+        settings.unlimited_faints ? UiMessage::On : UiMessage::Off, locale
+      )
     );
-    complete_quest_item_->setValue(completion_value(locale));
   }
 
   Model& model_;

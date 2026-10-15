@@ -51,14 +51,29 @@ platform::switch_adapter::SessionView Model::session_view() const {
   return view_;
 }
 
-QuestCompletionStatus Model::quest_completion_status() const {
+core::ActionStatus Model::action_status(const Action action) const {
   const std::scoped_lock lock(mutex_);
-  return quest_completion_status_;
+  return action_statuses_[static_cast<std::size_t>(action)];
 }
 
-FoodSkillApplyStatus Model::food_skill_apply_status() const {
+bool Model::begin_action(const Action action) {
   const std::scoped_lock lock(mutex_);
-  return food_skill_apply_status_;
+  auto& status = action_statuses_[static_cast<std::size_t>(action)];
+  if (!running_.load()) {
+    status = core::ActionStatus::Failed;
+    return false;
+  }
+  if (status == core::ActionStatus::Pending)
+    return false;
+  status = core::ActionStatus::Pending;
+  return true;
+}
+
+void Model::finish_action(
+  const Action action, const core::ActionStatus status
+) {
+  const std::scoped_lock lock(mutex_);
+  action_statuses_[static_cast<std::size_t>(action)] = status;
 }
 
 core::Locale Model::display_locale() const {
@@ -101,10 +116,9 @@ void Model::cycle_frame_rate() {
   core::CoreSettings changed{};
   {
     const std::scoped_lock lock(mutex_);
-    settings_.frame_rate =
-      settings_.frame_rate == core::FrameRate::Fps30
-        ? core::FrameRate::Fps60
-        : core::FrameRate::Fps30;
+    settings_.frame_rate = settings_.frame_rate == core::FrameRate::Fps30
+                             ? core::FrameRate::Fps60
+                             : core::FrameRate::Fps30;
     changed = settings_;
   }
   persist(changed);
@@ -116,8 +130,8 @@ void Model::cycle_hud_layout(const int direction) {
     const std::scoped_lock lock(mutex_);
     constexpr auto kLayoutCount = 5;
     auto current = static_cast<int>(settings_.hud_layout);
-    current = (current + (direction < 0 ? -1 : 1) + kLayoutCount) %
-              kLayoutCount;
+    current =
+      (current + (direction < 0 ? -1 : 1) + kLayoutCount) % kLayoutCount;
     settings_.hud_layout = static_cast<core::HudLayout>(current);
     changed = settings_;
   }
@@ -130,8 +144,8 @@ void Model::cycle_hud_content(const int direction) {
     const std::scoped_lock lock(mutex_);
     constexpr auto kContentCount = 3;
     auto current = static_cast<int>(settings_.hud_content);
-    current = (current + (direction < 0 ? -1 : 1) + kContentCount) %
-              kContentCount;
+    current =
+      (current + (direction < 0 ? -1 : 1) + kContentCount) % kContentCount;
     settings_.hud_content = static_cast<core::HudContent>(current);
     changed = settings_;
   }
@@ -220,7 +234,8 @@ void Model::cycle_damage_appear_effect(const int direction) {
     const std::scoped_lock lock(mutex_);
     constexpr auto kEffectCount = 4;
     auto current = static_cast<int>(settings_.damage_display.appear_effect);
-    current = (current + (direction < 0 ? -1 : 1) + kEffectCount) % kEffectCount;
+    current =
+      (current + (direction < 0 ? -1 : 1) + kEffectCount) % kEffectCount;
     settings_.damage_display.appear_effect =
       static_cast<core::DamageAppearEffect>(current);
     changed = settings_;
@@ -287,10 +302,8 @@ void Model::toggle_unlimited_faints() {
 }
 
 void Model::request_complete_quest() {
-  {
-    const std::scoped_lock lock(mutex_);
-    quest_completion_status_ = QuestCompletionStatus::Pending;
-  }
+  if (!begin_action(Action::CompleteQuest))
+    return;
   complete_quest_requested_ = true;
 }
 
@@ -387,9 +400,8 @@ void Model::adjust_item_pouch_slot(const int delta) {
   core::CoreSettings changed{};
   {
     const std::scoped_lock lock(mutex_);
-    const auto adjusted = std::clamp(
-      static_cast<int>(settings_.item_pouch_slot) + delta, 1, 10
-    );
+    const auto adjusted =
+      std::clamp(static_cast<int>(settings_.item_pouch_slot) + delta, 1, 10);
     if (adjusted == settings_.item_pouch_slot) {
       return;
     }
@@ -416,6 +428,8 @@ void Model::adjust_item_pouch_quantity(const int delta) {
 }
 
 void Model::request_item_pouch_quantity_write() {
+  if (!begin_action(Action::ItemPouchQuantity))
+    return;
   const auto current_settings = settings();
   const auto request = static_cast<std::uint16_t>(
     static_cast<std::uint16_t>(current_settings.item_pouch_slot) << 8 |
@@ -440,7 +454,6 @@ void Model::adjust_food_skill(const std::size_t slot, const int delta) {
       return;
     }
     settings_.food_skills[slot] = static_cast<core::FoodSkillId>(adjusted);
-    food_skill_apply_status_ = FoodSkillApplyStatus::Idle;
     changed = settings_;
   }
   persist(changed);
@@ -460,22 +473,19 @@ void Model::set_food_skill(const std::size_t slot, const core::FoodSkillId id) {
       return;
     }
     settings_.food_skills[slot] = id;
-    food_skill_apply_status_ = FoodSkillApplyStatus::Idle;
     changed = settings_;
   }
   persist(changed);
 }
 
 void Model::request_food_skills_write() {
+  if (!begin_action(Action::FoodSkills))
+    return;
   const auto current_settings = settings();
   const auto request =
     static_cast<std::uint32_t>(current_settings.food_skills[0]) << 16 |
     static_cast<std::uint32_t>(current_settings.food_skills[1]) << 8 |
     current_settings.food_skills[2];
-  {
-    const std::scoped_lock lock(mutex_);
-    food_skill_apply_status_ = FoodSkillApplyStatus::Pending;
-  }
   food_skill_write_request_.store(request);
 }
 
@@ -544,7 +554,8 @@ void Model::worker_main() {
       const auto now_ms = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::milliseconds>(
           damage_now.time_since_epoch()
-        ).count()
+        )
+          .count()
       );
       session_.poll_damage(true, now_ms);
       next_damage_poll = Clock::now() + kDamagePollInterval;
@@ -556,52 +567,53 @@ void Model::worker_main() {
       session_.poll(current_settings);
       next_full_poll = Clock::now() + kFullPollInterval;
     }
-    const auto item_pouch_write_request =
-      item_pouch_write_request_.exchange(0);
+    const auto item_pouch_write_request = item_pouch_write_request_.exchange(0);
     if (item_pouch_write_request != 0) {
-      session_.apply_item_pouch_quantity(
+      const auto applied = session_.apply_item_pouch_quantity(
         static_cast<std::uint8_t>(item_pouch_write_request >> 8),
         static_cast<std::uint8_t>(item_pouch_write_request & 0xFF)
       );
+      finish_action(
+        Action::ItemPouchQuantity,
+        applied ? core::ActionStatus::Completed : core::ActionStatus::Failed
+      );
     }
-    const auto food_skill_write_request =
-      food_skill_write_request_.exchange(0);
+    const auto food_skill_write_request = food_skill_write_request_.exchange(0);
     if (food_skill_write_request != 0) {
       const std::array<core::FoodSkillId, core::kFoodSkillSlotCount> skills{{
-        static_cast<core::FoodSkillId>(
-          (food_skill_write_request >> 16) & 0xFF
-        ),
-        static_cast<core::FoodSkillId>(
-          (food_skill_write_request >> 8) & 0xFF
-        ),
+        static_cast<core::FoodSkillId>((food_skill_write_request >> 16) & 0xFF),
+        static_cast<core::FoodSkillId>((food_skill_write_request >> 8) & 0xFF),
         static_cast<core::FoodSkillId>(food_skill_write_request & 0xFF),
       }};
       const auto result = session_.apply_food_skills(skills);
-      const std::scoped_lock lock(mutex_);
       switch (result) {
         case platform::switch_adapter::FoodSkillOperationResult::Success:
-          food_skill_apply_status_ = FoodSkillApplyStatus::Applied;
+          finish_action(Action::FoodSkills, core::ActionStatus::Completed);
           break;
-        case platform::switch_adapter::FoodSkillOperationResult::NoCharacterData:
-          food_skill_apply_status_ = FoodSkillApplyStatus::NoCharacterData;
+        case platform::switch_adapter::FoodSkillOperationResult::
+          NoCharacterData:
+          finish_action(
+            Action::FoodSkills, core::ActionStatus::NoCharacterData
+          );
           break;
         default:
-          food_skill_apply_status_ = FoodSkillApplyStatus::Failed;
+          finish_action(Action::FoodSkills, core::ActionStatus::Failed);
           break;
       }
     }
     if (complete_quest_requested_.exchange(false)) {
       const auto result = session_.complete_quest();
-      const std::scoped_lock lock(mutex_);
       switch (result) {
         case platform::switch_adapter::QuestOperationResult::Success:
-          quest_completion_status_ = QuestCompletionStatus::Completed;
+          finish_action(Action::CompleteQuest, core::ActionStatus::Completed);
           break;
         case platform::switch_adapter::QuestOperationResult::NoActiveQuest:
-          quest_completion_status_ = QuestCompletionStatus::NoActiveQuest;
+          finish_action(
+            Action::CompleteQuest, core::ActionStatus::NoActiveQuest
+          );
           break;
         default:
-          quest_completion_status_ = QuestCompletionStatus::Failed;
+          finish_action(Action::CompleteQuest, core::ActionStatus::Failed);
           break;
       }
     }

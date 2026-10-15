@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <utility>
@@ -17,9 +17,9 @@
 
 namespace {
 
-using mhgu::app::FoodSkillApplyStatus;
+using mhgu::app::Action;
 using mhgu::app::Model;
-using mhgu::app::QuestCompletionStatus;
+using mhgu::core::ActionStatus;
 using mhgu::core::DamageAppearEffect;
 using mhgu::core::DamageDriftMode;
 using mhgu::core::DamageStaggerMode;
@@ -45,7 +45,8 @@ std::uint64_t monotonic_milliseconds() {
   return static_cast<std::uint64_t>(
     std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::steady_clock::now().time_since_epoch()
-    ).count()
+    )
+      .count()
   );
 }
 
@@ -58,27 +59,27 @@ std::uint64_t g_overlay_shown_at_ms = 0;
 // left.  The chord that opens the menu (L + Down + R3 by default) is still
 // queued as freshly pressed keys on the first visible frame, so the combo
 // is ignored briefly after every show to avoid immediately hiding again.
-inline bool handle_minimize_combo(
-  const u64 keys_down,
-  const u64 keys_held
-) {
+inline bool handle_minimize_combo(const u64 keys_down, const u64 keys_held) {
   constexpr std::uint64_t kReopenGuardMs = 300;
   if (monotonic_milliseconds() - g_overlay_shown_at_ms < kReopenGuardMs) {
     return false;
   }
-  if ((keys_down & HidNpadButton_Down) != 0 &&
-      (keys_held & HidNpadButton_L) != 0) {
+  if (
+    (keys_down & HidNpadButton_Down) != 0 && (keys_held & HidNpadButton_L) != 0
+  ) {
     tsl::Overlay::get()->hide();
     return true;
   }
   return false;
 }
 
+// clang-format off
 #include "components/damage_text.hpp"
 #include "components/menu_items.hpp"
 #include "components/hud.hpp"
 #include "components/submenus.hpp"
 #include "components/main_menu.hpp"
+// clang-format on
 
 class MhguOverlay final : public tsl::Overlay {
 public:
